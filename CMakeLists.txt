@@ -11,25 +11,48 @@ SET (INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/usr)
 # ------------------------------------------------------------------------------
 # GRPC C/C++
 
+SET (GRPC_BUILD_TYPE Release)
 SET (GRPC_PREFIX ${CMAKE_SOURCE_DIR}/third-party/grpc)
 SET (GRPC_MAKE_ARGS prefix=${INSTALL_PREFIX} REQUIRE_CUSTOM_LIBRARIES_opt=true)
+SET (GRPC_YASM_PATH C:/ProgramData/chocolatey/lib/yasm/tools/yasm.exe)
 
-ExternalProject_Add (
-  GRPC
-  PREFIX ${GRPC_PREFIX}
+IF (WIN32)
+  ExternalProject_Add (
+    GRPC
+    PREFIX ${GRPC_PREFIX}
 
-  # Configure step (skip)
-  SOURCE_DIR ${GRPC_PREFIX}
-  CONFIGURE_COMMAND ""
+    # Configure step
+    # TODO(cennis91): carry our own repo of BoringSSL and specify it 
+    # with BORINGSSL_ROOT_DIR, from GRPC to point to master (or more recent)
+    SOURCE_DIR ${GRPC_PREFIX}
+    CONFIGURE_COMMAND ${CMAKE_COMMAND} -GNinja -DCMAKE_BUILD_TYPE=${GRPC_BUILD_TYPE} -DCMAKE_ASM_NASM_COMPILER="${GRPC_YASM_PATH}"
 
-  # Build step
-  BINARY_DIR ${GRPC_PREFIX}
-  BUILD_COMMAND make ${GRPC_MAKE_ARGS}
+    # Build step
+    BINARY_DIR ${GRPC_PREFIX}
+    BUILD_COMMAND ninja
 
-  # Install step
-  INSTALL_DIR ${INSTALL_PREFIX}
-  INSTALL_COMMAND make install ${GRPC_MAKE_ARGS}
-)
+    # Install step (skip)
+    INSTALL_DIR ${INSTALL_PREFIX}
+    INSTALL_COMMAND ""
+  )
+ELSE()
+  ExternalProject_Add (
+    GRPC
+    PREFIX ${GRPC_PREFIX}
+
+    # Configure step (skip)
+    SOURCE_DIR ${GRPC_PREFIX}
+    CONFIGURE_COMMAND ""
+
+    # Build step
+    BINARY_DIR ${GRPC_PREFIX}
+    BUILD_COMMAND make ${GRPC_MAKE_ARGS}
+
+    # Install step
+    INSTALL_DIR ${INSTALL_PREFIX}
+    INSTALL_COMMAND make install ${GRPC_MAKE_ARGS}
+  )
+ENDIF()
 
 # ------------------------------------------------------------------------------
 # Proto3
@@ -209,8 +232,8 @@ ExternalProject_Add (
     -DCMAKE_LIBRARY_PATH:string=${INSTALL_PREFIX}/lib
     -DCMAKE_PROGRAM_PATH:string=${INSTALL_PREFIX}/bin
     -DCMAKE_INCLUDE_PATH:string=${INSTALL_PREFIX}/include
-    # TODO(alexgolec): LLVM 7.0.0 on OSX complains about missing overrides in 
-    # GRPC headers. Hopefully those headers will eventually be updated, so 
+    # TODO(alexgolec): LLVM 7.0.0 on OSX complains about missing overrides in
+    # GRPC headers. Hopefully those headers will eventually be updated, so
     # remove this once that happens.
     -DCMAKE_CXX_FLAGS:string=-Wno-inconsistent-missing-override
     -DCMAKE_BUILD_TYPE:string=Debug
