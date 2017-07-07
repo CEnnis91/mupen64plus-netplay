@@ -1,27 +1,54 @@
-[submodule "mupen64plus-core"]
-	path = mupen64plus-core
-	url = https://github.com/water-works/mupen64plus-core
-  ignore = dirty
-[submodule "googletest"]
-	path = third-party/googletest
-	url = https://github.com/google/googletest
-  ignore = dirty
-[submodule "grpc"]
-	path = third-party/grpc
-	url = https://github.com/grpc/grpc
-  ignore = dirty
-[submodule "mupen64plus-ui-console"]
-	path = mupen64plus-ui-console
-	url = https://github.com/water-works/mupen64plus-ui-console
-  ignore = dirty
-[submodule "glog"]
-	path = third-party/glog
-	url = https://github.com/google/glog
-  ignore = dirty
+[submodule "third-party/boringssl"]
+	path = third-party/boringssl
+	url = https://github.com/google/boringssl.git
 [submodule "gflags"]
 	path = third-party/gflags
 	url = https://github.com/gflags/gflags
-  ignore = dirty
+	ignore = dirty
+[submodule "glog"]
+	path = third-party/glog
+	url = https://github.com/google/glog
+	ignore = dirty
+[submodule "googletest"]
+	path = third-party/googletest
+	url = https://github.com/google/googletest
+	ignore = dirty
+[submodule "grpc"]
+	path = third-party/grpc
+	url = https://github.com/grpc/grpc
+	ignore = dirty
+	
+[submodule "mupen64plus/mupen64plus-core"]
+	path = mupen64plus/mupen64plus-core
+	url = https://www.github.com/water-works/mupen64plus-core.git
+	ignore = dirty
+[submodule "mupen64plus-ui-python"]
+	path = mupen64plus/mupen64plus-ui-python
+	url = https://github.com/mupen64plus/mupen64plus-ui-python
+
+[submodule "mupen64plus-audio-sdl"]
+	path = mupen64plus/mupen64plus-audio-sdl
+	url = https://github.com/mupen64plus/mupen64plus-audio-sdl.git
+[submodule "mupen64plus-input-sdl"]
+	path = mupen64plus/mupen64plus-input-sdl
+	url = https://github.com/mupen64plus/mupen64plus-input-sdl.git
+[submodule "mupen64plus-rom"]
+	path = mupen64plus/mupen64plus-rom
+	url = https://github.com/mupen64plus/mupen64plus-rom.git
+[submodule "mupen64plus-rsp-hle"]
+	path = mupen64plus/mupen64plus-rsp-hle
+	url = https://github.com/mupen64plus/mupen64plus-rsp-hle.git
+[submodule "mupen64plus-video-glide64mk2"]
+	path = mupen64plus/mupen64plus-video-glide64mk2
+	url = https://github.com/mupen64plus/mupen64plus-video-glide64mk2.git
+[submodule "mupen64plus-video-rice"]
+	path = mupen64plus/mupen64plus-video-rice
+	url = https://github.com/mupen64plus/mupen64plus-video-rice.git
+[submodule "mupen64plus-win32-deps"]
+	path = mupen64plus/mupen64plus-win32-deps
+	url = https://github.com/mupen64plus/mupen64plus-win32-deps.git
+	
 [submodule "netplay/base/netplay-protos"]
 	path = netplay/base/netplay-protos
 	url = https://github.com/water-works/netplay-protos
+	
