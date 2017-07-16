@@ -84,45 +84,81 @@ ExternalProject_Add (
 
 SET (GTEST_PREFIX ${CMAKE_SOURCE_DIR}/third-party/googletest/googletest)
 
-ExternalProject_Add (
-  GTest
-  PREFIX ${GTEST_PREFIX}
+IF (WIN32)
+  ExternalProject_Add (
+    GTest
+    PREFIX ${GTEST_PREFIX}
 
-  # Configure step (cmake by default)
-  SOURCE_DIR ${GTEST_PREFIX}
+    SOURCE_DIR ${GTEST_PREFIX}
+    CONFIGURE_COMMAND ${CMAKE_COMMAND}
 
-  # Build step
-  BINARY_DIR ${GTEST_PREFIX}
-  BUILD_COMMAND make
+    # Build step
+    BINARY_DIR ${GTEST_PREFIX}
+    BUILD_COMMAND ${CMAKE_COMMAND} --build
 
-  # Install step (skip)
-  INSTALL_COMMAND ""
-)
+    # Install step (skip)
+    INSTALL_DIR ${INSTALL_PREFIX}
+    INSTALL_COMMAND ""
+  )
+ELSE()
+  ExternalProject_Add (
+    GTest
+    PREFIX ${GTEST_PREFIX}
+  
+    # Configure step (cmake by default)
+    SOURCE_DIR ${GTEST_PREFIX}
+  
+    # Build step
+    BINARY_DIR ${GTEST_PREFIX}
+    BUILD_COMMAND make
+  
+    # Install step (skip)
+    INSTALL_COMMAND ""
+  )
+ENDIF()
 
 # ------------------------------------------------------------------------------
 # GMock
 
 SET (GMOCK_PREFIX ${CMAKE_SOURCE_DIR}/third-party/googletest/googlemock)
 
-ExternalProject_Add (
-  GMock
-  PREFIX ${GMOCK_PREFIX}
+IF (WIN32)
+  ExternalProject_Add (
+    GMOCK
+    PREFIX ${GMOCK_PREFIX}
 
-  # Configure step (cmake by default)
-  SOURCE_DIR ${GMOCK_PREFIX}
+    SOURCE_DIR ${GMOCK_PREFIX}
+    CONFIGURE_COMMAND ${CMAKE_COMMAND}
 
-  # Build step
-  BINARY_DIR ${GMOCK_PREFIX}
-  BUILD_COMMAND make
+    # Build step
+    BINARY_DIR ${GMOCK_PREFIX}
+    BUILD_COMMAND ${CMAKE_COMMAND} --build
 
-  # Install step (skip)
-  INSTALL_COMMAND ""
-)
+    # Install step (skip)
+    INSTALL_DIR ${INSTALL_PREFIX}
+    INSTALL_COMMAND ""
+  )
+ELSE()
+  ExternalProject_Add (
+    GMOCK
+    PREFIX ${GMOCK_PREFIX}
+  
+    # Configure step (cmake by default)
+    SOURCE_DIR ${GMOCK_PREFIX}
+  
+    # Build step
+    BINARY_DIR ${GMOCK_PREFIX}
+    BUILD_COMMAND make
+  
+    # Install step (skip)
+    INSTALL_COMMAND ""
+  )
+ENDIF()
 
 # ------------------------------------------------------------------------------
 # mupen64plus-core
 
-SET (MUPEN64PLUS_CORE_PREFIX ${CMAKE_SOURCE_DIR}/mupen64plus-core/projects/unix)
+SET (MUPEN64PLUS_CORE_PREFIX ${CMAKE_SOURCE_DIR}/mupen64plus/mupen64plus-core/projects/unix)
 
 ExternalProject_Add(
   Mupen64Plus_Core
@@ -151,7 +187,7 @@ ExternalProject_Add_Step (
 # mupen64plus-ui-console
 
 SET (MUPEN64PLUS_UI_CONSOLE_PREFIX
-  ${CMAKE_SOURCE_DIR}/mupen64plus-ui-console/projects/unix)
+  ${CMAKE_SOURCE_DIR}/mupen64plus/mupen64plus-ui-console/projects/unix)
 
 ExternalProject_Add(
   Mupen64Plus_Ui_Console
@@ -228,7 +264,7 @@ ExternalProject_Add (
     -DGRPC_ROOT:string=${INSTALL_PREFIX}
     -DGTEST_ROOT:string=${GTEST_PREFIX}
     -DGMOCK_ROOT:string=${GMOCK_PREFIX}
-    -DMUPEN64_ROOT:string=${CMAKE_SOURCE_DIR}/mupen64plus-core/src/api
+    -DMUPEN64_ROOT:string=${CMAKE_SOURCE_DIR}/mupen64plus/mupen64plus-core/src/api
     -DCMAKE_LIBRARY_PATH:string=${INSTALL_PREFIX}/lib
     -DCMAKE_PROGRAM_PATH:string=${INSTALL_PREFIX}/bin
     -DCMAKE_INCLUDE_PATH:string=${INSTALL_PREFIX}/include
