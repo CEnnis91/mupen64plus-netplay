@@ -26,9 +26,9 @@
 	path = mupen64plus/mupen64plus-ui-console
 	url = https://www.github.com/water-works/mupen64plus-ui-console.git
 	ignore = dirty
-[submodule "mupen64plus-ui-python"]
+[submodule "mupen64plus/mupen64plus-ui-python"]
 	path = mupen64plus/mupen64plus-ui-python
-	url = https://github.com/mupen64plus/mupen64plus-ui-python
+	url = https://github.com/water-works/mupen64plus-ui-python
 
 [submodule "mupen64plus-audio-sdl"]
 	path = mupen64plus/mupen64plus-audio-sdl
@@ -55,4 +55,4 @@
 [submodule "netplay/base/netplay-protos"]
 	path = netplay/base/netplay-protos
 	url = https://github.com/water-works/netplay-protos
-	
+
