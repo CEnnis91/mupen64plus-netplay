@@ -41,12 +41,12 @@ ExternalProject_Add ( GRPC
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${OUTPUT_PREFIX}
     CONFIGURE_COMMAND ${CMAKE_COMMAND}
         -GNinja
-	-DCMAKE_BUILD_TYPE=${GRPC_BUILD_TYPE}
-	-DBORINGSSL_ROOT_DIR=${GRPC_BORINGSSL_PREFIX}
-	-DCMAKE_INSTALL_PREFIX:PATH=${OUTPUT_PREFIX}
-	# TODO(cennis91): detection of YASM seems to be working fine
-	# unsure if it will work everywhere, it can be set this way
-	#-DCMAKE_ASM_NASM_COMPILER="${GRPC_YASM_PATH}"
+        -DCMAKE_BUILD_TYPE=${GRPC_BUILD_TYPE}
+        -DBORINGSSL_ROOT_DIR=${GRPC_BORINGSSL_PREFIX}
+        -DCMAKE_INSTALL_PREFIX:PATH=${OUTPUT_PREFIX}
+        # TODO(cennis91): detection of YASM seems to be working fine
+        # unsure if it will work everywhere, it can be set this way
+        #-DCMAKE_ASM_NASM_COMPILER="${GRPC_YASM_PATH}"
    
     BINARY_DIR ${GRPC_PREFIX}
     BUILD_COMMAND ninja
@@ -90,7 +90,7 @@ ExternalProject_Add (Protobuf3
     BUILD_COMMAND ""
         
     INSTALL_DIR ${OUTPUT_PREFIX}
-    #INSTALL_COMMAND ""
+    INSTALL_COMMAND echo "No need to install Protobuf3"
 )
 ELSE ()
 ExternalProject_Add (Protobuf3
@@ -328,15 +328,16 @@ ExternalProject_Add (Netplay
         GLog
         Mupen64Plus_Core
         Mupen64Plus_Ui_Console
-	
+        
     CMAKE_ARGS
         -DGRPC_ROOT:string=${GRPC_PREFIX}
-	-DProtobuf_SRC_ROOT_FOLDER:string=${PROTOBUF3_PREFIX}
-	-DCMAKE_PREFIX_PATH:string=${PROTOBUF3_PREFIX}
-        -DGTEST_ROOT:string=${GOOGLE_TEST_PREFIX}/${GOOGLE_TEST_BUILD_TYPE}
-        -DGFLAGS_ROOT:string=${OUTPUT_PREFIX}/lib
-	-DGFLAGS_LIBRARIES:string=${OUTPUT_PREFIX}/lib
+        -DProtobuf_SRC_ROOT_FOLDER:string=${PROTOBUF3_PREFIX}
+        -DCMAKE_PREFIX_PATH:string=${PROTOBUF3_PREFIX}
+        -DGLOG_ROOT:string=${OUTPUT_PREFIX}/lib
+        -DGTEST_ROOT:string=${OUTPUT_PREFIX}/lib
         -DGMOCK_ROOT:string=${OUTPUT_PREFIX}/lib
+        -DGFLAGS_ROOT:string=${OUTPUT_PREFIX}/lib
+        -DGFLAGS_LIBRARIES:string=${OUTPUT_PREFIX}/lib
         -DMUPEN64_ROOT:string=${MUPEN64PLUS_CORE_PREFIX}/src/api
         -DCMAKE_PROGRAM_PATH:string=${OUTPUT_PREFIX}/bin
         -DCMAKE_LIBRARY_PATH:string=${OUTPUT_PREFIX}/lib
@@ -366,7 +367,7 @@ ExternalProject_Add (Netplay
         GLog
         Mupen64Plus_Core
         Mupen64Plus_Ui_Console
-	
+        
     CMAKE_ARGS
         -DGRPC_ROOT:string=${OUTPUT_PREFIX}
         -DGTEST_ROOT:string=${GOOGLE_TEST_PREFIX}
