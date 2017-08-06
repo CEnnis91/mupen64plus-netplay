@@ -58,3 +58,29 @@ Run tests:
 
     cd netplay
     make test
+
+Building - Windows (In Progress)
+--------------------------------
+
+Install dependencies
+
+    # this may not be an exhaustive list of what is needed
+    Follow the recommended steps for Windows https://github.com/grpc/grpc/blob/master/INSTALL.md
+    MSVC 2015 (For most of the project)
+    MSVC 2013 (For building mupen64plus)
+
+Clone and build the repo:
+
+    git clone https://github.com/CEnnis91/mupen64plus-netplay.git -b windows
+    cd mupen64plus-netplay
+
+    # Pull down all dependencies.
+    git submodule update --init --recursive
+    
+    # Build
+    mkdir .build
+    cd .build
+    cmake ../.
+    
+    # Open ALL_BUILDS.vcxproj in MSVC 2015
+    # Currently this seems to build everything except for the netplay project
