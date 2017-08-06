@@ -1,381 +1,397 @@
-CMAKE_MINIMUM_REQUIRED (VERSION 3.2)
+# ------------------------------------------------------------------------------
+# mupen64plus-netplay Global CMake
 
+cmake_minimum_required (VERSION 3.2)
 include (ExternalProject)
 
 # ------------------------------------------------------------------------------
-# Global variables.
+# Global Variables
 
-# Installation directory of all required projects.
-SET (INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/usr)
+SET (GLOBAL_BUILD_TYPE Debug)
+
+SET (MUPEN64PLUS_PREFIX ${CMAKE_SOURCE_DIR}/mupen64plus)
+SET (NETPLAY_PREFIX ${CMAKE_SOURCE_DIR}/netplay)
+SET (OUTPUT_PREFIX ${CMAKE_SOURCE_DIR}/output)
+SET (STATIC_FILES_PREFIX ${CMAKE_SOURCE_DIR}/static-files)
+SET (THIRD_PARTY_PREFIX ${CMAKE_SOURCE_DIR}/third-party)
+
+# mupen64plus holds project files in different directories
+if (WIN32)
+    SET (MUPEN64PLUS_PROJECT_DIR projects/VisualStudio2013)
+ELSE ()
+    SET (MUPEN64PLUS_PROJECT_DIR projects/unix)
+ENDIF ()
 
 # ------------------------------------------------------------------------------
 # GRPC C/C++
 
-SET (GRPC_BUILD_TYPE Release)
-SET (GRPC_PREFIX ${CMAKE_SOURCE_DIR}/third-party/grpc)
-SET (GRPC_MAKE_ARGS prefix=${INSTALL_PREFIX} REQUIRE_CUSTOM_LIBRARIES_opt=true)
-SET (GRPC_YASM_PATH C:/ProgramData/chocolatey/lib/yasm/tools/yasm.exe)
-SET (GRPC_BORING_SSL ${GRPC_PREFIX}/third_party/boringssl)
+SET (GRPC_PREFIX ${THIRD_PARTY_PREFIX}/grpc)
 
 IF (WIN32)
-  ExternalProject_Add (
-    GRPC
+SET (GRPC_BORINGSSL_PREFIX ${GRPC_PREFIX}/third_party/boringssl)
+SET (GRPC_BUILD_TYPE Release)
+SET (GRPC_YASM_PATH C:/ProgramData/chocolatey/lib/yasm/tools/yasm.exe)
+
+ExternalProject_Add ( GRPC
     PREFIX ${GRPC_PREFIX}
-
-    # Configure step
-    # TODO(cennis91): carry our own repo of BoringSSL and specify it 
-    # with BORINGSSL_ROOT_DIR, from GRPC to point to master (or more recent)
     SOURCE_DIR ${GRPC_PREFIX}
-    CONFIGURE_COMMAND ${CMAKE_COMMAND} -GNinja -DCMAKE_BUILD_TYPE=${GRPC_BUILD_TYPE} -DBORINGSSL_ROOT_DIR=${GRPC_BORING_SSL} -DCMAKE_ASM_NASM_COMPILER="${GRPC_YASM_PATH}" 
 
-    # Build step
+    # TODO(cennis91): carry our own repo of BoringSSL and specify it
+    # with BORINGSSL_ROOT_DIR, from GRPC to point to master (or more recent)
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${OUTPUT_PREFIX}
+    CONFIGURE_COMMAND ${CMAKE_COMMAND}
+        -GNinja
+	-DCMAKE_BUILD_TYPE=${GRPC_BUILD_TYPE}
+	-DBORINGSSL_ROOT_DIR=${GRPC_BORINGSSL_PREFIX}
+	-DCMAKE_INSTALL_PREFIX:PATH=${OUTPUT_PREFIX}
+	# TODO(cennis91): detection of YASM seems to be working fine
+	# unsure if it will work everywhere, it can be set this way
+	#-DCMAKE_ASM_NASM_COMPILER="${GRPC_YASM_PATH}"
+   
     BINARY_DIR ${GRPC_PREFIX}
     BUILD_COMMAND ninja
+        
+    INSTALL_DIR ${OUTPUT_PREFIX}
+    #INSTALL_COMMAND ""
+)
+ELSE ()
+SET (GRPC_MAKE_ARGS prefix=${OUTPUT_PREFIX} REQUIRE_CUSTOM_LIBRARIES_opt=true)
 
-    # Install step (skip)
-    INSTALL_DIR ${INSTALL_PREFIX}
-    INSTALL_COMMAND ""
-  )
-ELSE()
-  ExternalProject_Add (
-    GRPC
+ExternalProject_Add ( GRPC
     PREFIX ${GRPC_PREFIX}
-
-    # Configure step (skip)
     SOURCE_DIR ${GRPC_PREFIX}
+        
     CONFIGURE_COMMAND ""
-
-    # Build step
+        
     BINARY_DIR ${GRPC_PREFIX}
     BUILD_COMMAND make ${GRPC_MAKE_ARGS}
-
-    # Install step
-    INSTALL_DIR ${INSTALL_PREFIX}
+        
+    INSTALL_DIR ${OUTPUT_PREFIX}
     INSTALL_COMMAND make install ${GRPC_MAKE_ARGS}
-  )
-ENDIF()
-
-# ------------------------------------------------------------------------------
-# Proto3
-#
-# Note we use the proto3 repository cloned by the grpc submodule.
-
-SET (PROTO3_PREFIX ${CMAKE_SOURCE_DIR}/third-party/grpc/third_party/protobuf)
-
-IF (WIN32)
-  ExternalProject_Add (
-    Protobuf3
-    PREFIX ${PROTO3_PREFIX}
-    DEPENDS GRPC
-  
-    # Configure step (skip)
-    SOURCE_DIR ${PROTO3_PREFIX}
-    CONFIGURE_COMMAND ""
-  
-    # Build step
-    BINARY_DIR ${PROTO3_PREFIX}
-    BUILD_COMMAND ""
-  
-    # Install step
-    INSTALL_DIR ${INSTALL_PREFIX}
-    INSTALL_COMMAND ""
-  )
-ELSE()
-  ExternalProject_Add (
-    Protobuf3
-    PREFIX ${PROTO3_PREFIX}
-    DEPENDS GRPC
-  
-    # Configure step (skip)
-    SOURCE_DIR ${PROTO3_PREFIX}
-    CONFIGURE_COMMAND ""
-  
-    # Build step
-    BINARY_DIR ${PROTO3_PREFIX}
-    BUILD_COMMAND ""
-  
-    # Install step
-    INSTALL_DIR ${INSTALL_PREFIX}
-    INSTALL_COMMAND make install prefix=${INSTALL_PREFIX}
-  )
-ENDIF()
-
-# ------------------------------------------------------------------------------
-# GTest
-
-SET (GTEST_PREFIX ${CMAKE_SOURCE_DIR}/third-party/googletest/googletest)
-
-IF (WIN32)
-  ExternalProject_Add (
-    GTest
-    PREFIX ${GTEST_PREFIX}
-
-    SOURCE_DIR ${GTEST_PREFIX}
-    CONFIGURE_COMMAND ${CMAKE_COMMAND} .
-
-    # Build step
-    BINARY_DIR ${GTEST_PREFIX}
-    BUILD_COMMAND ${CMAKE_COMMAND} --build .
-
-    # Install step (skip)
-    INSTALL_DIR ${INSTALL_PREFIX}
-    INSTALL_COMMAND ""
-  )
-ELSE()
-  ExternalProject_Add (
-    GTest
-    PREFIX ${GTEST_PREFIX}
-  
-    # Configure step (cmake by default)
-    SOURCE_DIR ${GTEST_PREFIX}
-  
-    # Build step
-    BINARY_DIR ${GTEST_PREFIX}
-    BUILD_COMMAND make
-  
-    # Install step (skip)
-    INSTALL_COMMAND ""
-  )
-ENDIF()
-
-# ------------------------------------------------------------------------------
-# GMock
-
-SET (GMOCK_PREFIX ${CMAKE_SOURCE_DIR}/third-party/googletest/googlemock)
-
-IF (WIN32)
-  ExternalProject_Add (
-    GMock
-    PREFIX ${GMOCK_PREFIX}
-
-    SOURCE_DIR ${GMOCK_PREFIX}
-    CONFIGURE_COMMAND ${CMAKE_COMMAND} .
-
-    # Build step
-    BINARY_DIR ${GMOCK_PREFIX}
-    BUILD_COMMAND ${CMAKE_COMMAND} --build .
-
-    # Install step (skip)
-    INSTALL_DIR ${INSTALL_PREFIX}
-    INSTALL_COMMAND ""
-  )
-ELSE()
-  ExternalProject_Add (
-    GMock
-    PREFIX ${GMOCK_PREFIX}
-  
-    # Configure step (cmake by default)
-    SOURCE_DIR ${GMOCK_PREFIX}
-  
-    # Build step
-    BINARY_DIR ${GMOCK_PREFIX}
-    BUILD_COMMAND make
-  
-    # Install step (skip)
-    INSTALL_COMMAND ""
-  )
-ENDIF()
-
-# ------------------------------------------------------------------------------
-# mupen64plus-core
-
-IF (WIN32)
-  SET (MUPEN64PLUS_CORE_PREFIX ${CMAKE_SOURCE_DIR}/mupen64plus/mupen64plus-core/projects/VisualStudio2013)
-
-  ExternalProject_Add(
-    Mupen64Plus_Core
-    PREFIX ${MUPEN64PLUS_CORE_PREFIX}
-  
-    # Configure step (skip)
-    SOURCE_DIR ${MUPEN64PLUS_CORE_PREFIX}
-    CONFIGURE_COMMAND ""
-  
-    # Build step
-    BINARY_DIR ${MUPEN64PLUS_CORE_PREFIX}
-    BUILD_COMMAND ""
-  
-    # Install step (skip)
-    INSTALL_COMMAND ""
-  )
-  
-  ExternalProject_Add_Step (
-    Mupen64Plus_Core forceconfigure
-    COMMAND ${CMAKE_COMMAND} -E echo "Force configure of mupen64plus-core"
-    DEPENDEES update
-    DEPENDERS configure
-    ALWAYS 1)
-ELSE()
-  SET (MUPEN64PLUS_CORE_PREFIX ${CMAKE_SOURCE_DIR}/mupen64plus/mupen64plus-core/projects/unix)
-
-  ExternalProject_Add(
-    Mupen64Plus_Core
-    PREFIX ${MUPEN64PLUS_CORE_PREFIX}
-  
-    # Configure step (skip)
-    SOURCE_DIR ${MUPEN64PLUS_CORE_PREFIX}
-    CONFIGURE_COMMAND ""
-  
-    # Build step
-    BINARY_DIR ${MUPEN64PLUS_CORE_PREFIX}
-    BUILD_COMMAND make all DEBUG=1
-  
-    # Install step (skip)
-    INSTALL_COMMAND ""
-  )
-  
-  ExternalProject_Add_Step (
-    Mupen64Plus_Core forceconfigure
-    COMMAND ${CMAKE_COMMAND} -E echo "Force configure of mupen64plus-core"
-    DEPENDEES update
-    DEPENDERS configure
-    ALWAYS 1)
-ENDIF()
-
-# ------------------------------------------------------------------------------
-# mupen64plus-ui-console
-
-IF (WIN32)
-  SET (MUPEN64PLUS_UI_CONSOLE_PREFIX ${CMAKE_SOURCE_DIR}/mupen64plus/mupen64plus-ui-console/projects/VisualStudio2013)
-
-  ExternalProject_Add(
-    Mupen64Plus_Ui_Console
-    PREFIX ${MUPEN64PLUS_UI_CONSOLE_PREFIX}
-  
-    # Configure step (skip)
-    SOURCE_DIR ${MUPEN64PLUS_UI_CONSOLE_PREFIX}
-    CONFIGURE_COMMAND ""
-  
-    # Build step
-    BINARY_DIR ${MUPEN64PLUS_UI_CONSOLE_PREFIX}
-    BUILD_COMMAND msbuild
-  
-    # Install step (skip)
-    INSTALL_COMMAND ""
-  )
-
-  ExternalProject_Add_Step (
-    Mupen64Plus_Ui_Console forceconfigure
-    COMMAND ${CMAKE_COMMAND} -E echo "Force configure of mupen64plus-ui-console"
-    DEPENDEES update
-    DEPENDERS configure
-    ALWAYS 1)
-ELSE()
-  SET (MUPEN64PLUS_UI_CONSOLE_PREFIX ${CMAKE_SOURCE_DIR}/mupen64plus/mupen64plus-ui-console/projects/unix)
-
-  ExternalProject_Add(
-    Mupen64Plus_Ui_Console
-    PREFIX ${MUPEN64PLUS_UI_CONSOLE_PREFIX}
-  
-    # Configure step (skip)
-    SOURCE_DIR ${MUPEN64PLUS_UI_CONSOLE_PREFIX}
-    CONFIGURE_COMMAND ""
-  
-    # Build step
-    BINARY_DIR ${MUPEN64PLUS_UI_CONSOLE_PREFIX}
-    BUILD_COMMAND make PIE=1 all
-  
-    # Install step (skip)
-    INSTALL_COMMAND ""
-  )
-
-  ExternalProject_Add_Step (
-    Mupen64Plus_Ui_Console forceconfigure
-    COMMAND ${CMAKE_COMMAND} -E echo "Force configure of mupen64plus-ui-console"
-    DEPENDEES update
-    DEPENDERS configure
-    ALWAYS 1)
-ENDIF()
-
-# ------------------------------------------------------------------------------
-# GFlags
-
-SET (GFLAGS_PREFIX ${CMAKE_SOURCE_DIR}/third-party/gflags)
-
-ExternalProject_Add(
-  GFlags
-  PREFIX ${GFLAGS_PREFIX}
-
-  SOURCE_DIR ${GFLAGS_PREFIX}
-  CMAKE_ARGS
-    -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_PREFIX}
-    -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=True
 )
+ENDIF ()
+
+# ------------------------------------------------------------------------------
+# Protobuf3
+
+SET (PROTOBUF3_PREFIX ${GRPC_PREFIX}/third_party/protobuf)
+SET (PROTOBUF3_BUILD_TYPE ${GLOBAL_BUILD_TYPE})
+
+IF (WIN32)
+ExternalProject_Add (Protobuf3
+    PREFIX ${PROTOBUF3_PREFIX}
+    DEPENDS GRPC
+    SOURCE_DIR ${PROTOBUF3_PREFIX}
+
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${OUTPUT_PREFIX}
+    CONFIGURE_COMMAND ""
+        
+    BINARY_DIR ${PROTOBUF3_PREFIX}
+    BUILD_COMMAND ""
+        
+    INSTALL_DIR ${OUTPUT_PREFIX}
+    #INSTALL_COMMAND ""
+)
+ELSE ()
+ExternalProject_Add (Protobuf3
+    PREFIX ${PROTOBUF3_PREFIX}
+    DEPENDS GRPC
+    SOURCE_DIR ${PROTOBUF3_PREFIX}
+
+    CONFIGURE_COMMAND ""
+        
+    BINARY_DIR ${PROTOBUF3_PREFIX}
+    BUILD_COMMAND ""
+        
+    INSTALL_DIR ${OUTPUT_PREFIX}
+    INSTALL_COMMAND make install prefix=${OUTPUT_PREFIX}
+)
+ENDIF ()
+
+# ------------------------------------------------------------------------------
+# GoogleTest
+
+SET (GOOGLE_TEST_PREFIX ${THIRD_PARTY_PREFIX}/googletest/googletest)
+SET (GOOGLE_TEST_BUILD_TYPE ${GLOBAL_BUILD_TYPE})
+
+IF (WIN32)
+ExternalProject_Add (GoogleTest
+    PREFIX ${GOOGLE_TEST_PREFIX}
+    SOURCE_DIR ${GOOGLE_TEST_PREFIX}
+
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${OUTPUT_PREFIX}
+    CONFIGURE_COMMAND ${CMAKE_COMMAND}
+        -DCMAKE_INSTALL_PREFIX:PATH=${OUTPUT_PREFIX} .
+    
+    BINARY_DIR ${GOOGLE_TEST_PREFIX}
+    BUILD_COMMAND ${CMAKE_COMMAND} --build .
+    
+    INSTALL_DIR ${OUTPUT_PREFIX}
+    #INSTALL_COMMAND ""
+)
+ELSE ()
+ExternalProject_Add (GoogleTest
+    PREFIX ${GOOGLE_TEST_PREFIX}
+    SOURCE_DIR ${GOOGLE_TEST_PREFIX}
+    
+    BINARY_DIR ${GOOGLE_TEST_PREFIX}
+    BUILD_COMMAND make
+    
+    INSTALL_DIR ${OUTPUT_PREFIX}
+    INSTALL_COMMAND ""
+)
+ENDIF ()
+
+# ------------------------------------------------------------------------------
+# GoogleMock
+
+SET (GOOGLE_MOCK_PREFIX ${THIRD_PARTY_PREFIX}/googletest/googlemock)
+SET (GOOGLE_MOCK_BUILD_TYPE ${GLOBAL_BUILD_TYPE})
+
+IF (WIN32)
+ExternalProject_Add (GoogleMock
+    PREFIX ${GOOGLE_MOCK_PREFIX}
+    SOURCE_DIR ${GOOGLE_MOCK_PREFIX}
+
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${OUTPUT_PREFIX}
+    CONFIGURE_COMMAND ${CMAKE_COMMAND}
+         -DCMAKE_INSTALL_PREFIX:PATH=${OUTPUT_PREFIX} .
+
+    BINARY_DIR ${GOOGLE_MOCK_PREFIX}
+    BUILD_COMMAND ${CMAKE_COMMAND} --build .
+
+    INSTALL_DIR ${OUTPUT_PREFIX}
+    #INSTALL_COMMAND ""
+)
+ELSE ()
+ExternalProject_Add (GoogleMock
+    PREFIX ${GOOGLE_MOCK_PREFIX}
+    SOURCE_DIR ${GOOGLE_MOCK_PREFIX}
+    
+    BINARY_DIR ${GOOGLE_MOCK_PREFIX}
+    BUILD_COMMAND make
+    
+    INSTALL_DIR ${OUTPUT_PREFIX}
+    INSTALL_COMMAND ""
+)
+ENDIF ()
 
 # ------------------------------------------------------------------------------
 # GLog
 
-SET (GLOG_PREFIX ${CMAKE_SOURCE_DIR}/third-party/glog)
+SET (GLOG_PREFIX ${THIRD_PARTY_PREFIX}/glog)
+SET (GLOG_BUILD_TYPE ${GLOBAL_BUILD_TYPE})
 
 IF (WIN32)
-  ExternalProject_Add(
-    GLog
+ExternalProject_Add (GLog
     PREFIX ${GLOG_PREFIX}
-  
     SOURCE_DIR ${GLOG_PREFIX}
-    CONFIGURE_COMMAND ${CMAKE_COMMAND} .
 
-    # Build step
-    BINARY_DIR ${GMOCK_PREFIX}
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${OUTPUT_PREFIX}
+    CONFIGURE_COMMAND ${CMAKE_COMMAND}
+         -DCMAKE_INSTALL_PREFIX:PATH=${OUTPUT_PREFIX} .
+
+    BINARY_DIR ${GLOG_PREFIX}
     BUILD_COMMAND ${CMAKE_COMMAND} --build .
-    
-    # Install step (skip)
-    INSTALL_COMMAND ""
-  )
-ELSE()
-  ExternalProject_Add(
-    GLog
+
+    INSTALL_DIR ${OUTPUT_PREFIX}
+    #INSTALL_COMMAND ""
+)
+ELSE ()
+ExternalProject_Add (GLog
     PREFIX ${GLOG_PREFIX}
-  
     SOURCE_DIR ${GLOG_PREFIX}
+
     CONFIGURE_COMMAND cd ${GLOG_PREFIX} && autoreconf --force --install
-              COMMAND ${GLOG_PREFIX}/configure --prefix=${INSTALL_PREFIX}
-  )
-ENDIF()
+        COMMAND ${GLOG_PREFIX}/configure --prefix=${OUTPUT_PREFIX}
+
+    BINARY_DIR ${GLOG_PREFIX}
+    BUILD_COMMAND ""
+
+    INSTALL_DIR ${OUTPUT_PREFIX}
+    INSTALL_COMMAND ""
+)
+ENDIF ()
+
+# ------------------------------------------------------------------------------
+# GFlags
+
+SET (GFLAGS_PREFIX ${THIRD_PARTY_PREFIX}/gflags)
+
+ExternalProject_Add (GFlags
+    PREFIX ${GFLAGS_PREFIX}
+    SOURCE_DIR ${GFLAGS_PREFIX}
+
+    CMAKE_ARGS
+        -DCMAKE_INSTALL_PREFIX:PATH=${OUTPUT_PREFIX}
+        -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=True
+)
+
+# ------------------------------------------------------------------------------
+# mupen64plus-core
+
+SET (MUPEN64PLUS_CORE_PREFIX ${MUPEN64PLUS_PREFIX}/mupen64plus-core)
+SET (MUPEN64PLUS_CORE_PROJECT_PREFIX ${MUPEN64PLUS_CORE_PREFIX}/${MUPEN64PLUS_PROJECT_DIR})
+
+IF (WIN32)
+ExternalProject_Add (Mupen64Plus_Core
+    PREFIX ${MUPEN64PLUS_CORE_PROJECT_PREFIX}
+    SOURCE_DIR ${MUPEN64PLUS_CORE_PROJECT_PREFIX}
+
+    CONFIGURE_COMMAND ""
+    
+    BINARY_DIR ${MUPEN64PLUS_CORE_PROJECT_PREFIX}
+    BUILD_COMMAND ""
+    
+    INSTALL_DIR ${OUTPUT_PREFIX}
+    INSTALL_COMMAND ""
+)
+ELSE ()
+ExternalProject_Add (Mupen64Plus_Core
+    PREFIX ${MUPEN64PLUS_CORE_PROJECT_PREFIX}
+    SOURCE_DIR ${MUPEN64PLUS_CORE_PROJECT_PREFIX}
+    
+    CONFIGURE_COMMAND ""
+    
+    BINARY_DIR ${MUPEN64PLUS_CORE_PROJECT_PREFIX}
+    BUILD_COMMAND make all DEBUG=1
+    
+    INSTALL_DIR ${OUTPUT_PREFIX}
+    INSTALL_COMMAND ""
+)
+ENDIF ()
+
+ExternalProject_Add_Step (Mupen64Plus_Core Force_Configure
+    COMMAND ${CMAKE_COMMAND} -E echo "Force configure of Mupen64Plus_Core"
+    DEPENDEES update
+    DEPENDERS configure
+    ALWAYS 1
+)
+
+# ------------------------------------------------------------------------------
+# mupen64plus-ui-console
+
+SET (MUPEN64PLUS_UI_CONSOLE_PREFIX ${MUPEN64PLUS_PREFIX}/mupen64plus-ui-console)
+SET (MUPEN64PLUS_UI_CONSOLE_PROJECT_PREFIX ${MUPEN64PLUS_UI_CONSOLE_PREFIX}/${MUPEN64PLUS_PROJECT_DIR})
+SET (MSVC_2013_PREFIX C:\\PROGRA~2\\MICROS~2.0\\Common7\\Tools)
+
+IF (WIN32)
+ExternalProject_Add (Mupen64Plus_Ui_Console
+    PREFIX ${MUPEN64PLUS_UI_CONSOLE_PROJECT_PREFIX}
+    SOURCE_DIR ${MUPEN64PLUS_UI_CONSOLE_PROJECT_PREFIX}
+
+    CONFIGURE_COMMAND ""
+    
+    BINARY_DIR ${MUPEN64PLUS_UI_CONSOLE_PROJECT_PREFIX}
+    BUILD_COMMAND msbuild ${MUPEN64PLUS_UI_CONSOLE_PROJECT_PREFIX}/mupen64plus-ui-console.vcxproj
+    
+    INSTALL_DIR ${OUTPUT_PREFIX}
+    INSTALL_COMMAND ""
+)
+ELSE ()
+ExternalProject_Add (Mupen64Plus_Ui_Console
+    PREFIX ${MUPEN64PLUS_UI_CONSOLE_PROJECT_PREFIX}
+    SOURCE_DIR ${MUPEN64PLUS_UI_CONSOLE_PROJECT_PREFIX}
+
+    CONFIGURE_COMMAND ""
+    
+    BINARY_DIR ${MUPEN64PLUS_UI_CONSOLE_PROJECT_PREFIX}
+    BUILD_COMMAND make PIE=1 all
+    
+    INSTALL_DIR ${OUTPUT_PREFIX}
+    INSTALL_COMMAND ""
+)
+ENDIF ()
+
+ExternalProject_Add_Step (Mupen64Plus_Ui_Console Force_Configure
+    COMMAND ${CMAKE_COMMAND} -E echo "Force configure of Mupen64Plus_Ui_Console"
+    DEPENDEES update
+    DEPENDERS configure
+    ALWAYS 1
+)
 
 # ------------------------------------------------------------------------------
 # Netplay
 
-SET (NETPLAY_PREFIX ${CMAKE_SOURCE_DIR}/netplay)
+SET (NETPLAY_BUILD_TYPE ${GLOBAL_BUILD_TYPE})
 
-ExternalProject_Add (
-  Netplay
-  PREFIX ${NETPLAY_PREFIX}
-  DEPENDS
-    Protobuf3
-    GRPC
-    GTest
-    GMock
-    GLog
-    Mupen64Plus_Core
-    Mupen64Plus_Ui_Console
+IF (WIN32)
+ExternalProject_Add (Netplay
+    PREFIX ${NETPLAY_PREFIX}
+    SOURCE_DIR ${NETPLAY_PREFIX}
 
-  # Configure step
-  SOURCE_DIR ${NETPLAY_PREFIX}
-  CMAKE_ARGS
-    -DGRPC_ROOT:string=${INSTALL_PREFIX}
-    -DGTEST_ROOT:string=${GTEST_PREFIX}
-    -DGMOCK_ROOT:string=${GMOCK_PREFIX}
-    -DMUPEN64_ROOT:string=${CMAKE_SOURCE_DIR}/mupen64plus/mupen64plus-core/src/api
-    -DCMAKE_LIBRARY_PATH:string=${INSTALL_PREFIX}/lib
-    -DCMAKE_PROGRAM_PATH:string=${INSTALL_PREFIX}/bin
-    -DCMAKE_INCLUDE_PATH:string=${INSTALL_PREFIX}/include
-    # TODO(alexgolec): LLVM 7.0.0 on OSX complains about missing overrides in
-    # GRPC headers. Hopefully those headers will eventually be updated, so
-    # remove this once that happens.
-    #-DCMAKE_CXX_FLAGS:string=-Wno-inconsistent-missing-override
-    -DCMAKE_BUILD_TYPE:string=Debug
-
-  # Build step
-  BINARY_DIR ${NETPLAY_PREFIX}
-  BUILD_COMMAND make
-
-  # Install step (skip)
-  INSTALL_COMMAND ""
+    DEPENDS
+        GRPC
+        Protobuf3
+        GoogleTest
+        GoogleMock
+        GLog
+        Mupen64Plus_Core
+        Mupen64Plus_Ui_Console
+	
+    CMAKE_ARGS
+        -DGRPC_ROOT:string=${GRPC_PREFIX}
+	-DProtobuf_SRC_ROOT_FOLDER:string=${PROTOBUF3_PREFIX}
+	-DCMAKE_PREFIX_PATH:string=${PROTOBUF3_PREFIX}
+        -DGTEST_ROOT:string=${GOOGLE_TEST_PREFIX}/${GOOGLE_TEST_BUILD_TYPE}
+        -DGFLAGS_ROOT:string=${OUTPUT_PREFIX}/lib
+	-DGFLAGS_LIBRARIES:string=${OUTPUT_PREFIX}/lib
+        -DGMOCK_ROOT:string=${OUTPUT_PREFIX}/lib
+        -DMUPEN64_ROOT:string=${MUPEN64PLUS_CORE_PREFIX}/src/api
+        -DCMAKE_PROGRAM_PATH:string=${OUTPUT_PREFIX}/bin
+        -DCMAKE_LIBRARY_PATH:string=${OUTPUT_PREFIX}/lib
+        -DCMAKE_INCLUDE_PATH:string=${OUTPUT_PREFIX}/include
+        # TODO(alexgolec): LLVM 7.0.0 on OSX complains about missing overrides in
+        # GRPC headers. Hopefully those headers will eventually be updated, so
+        # remove this once that happens.
+        #-DCMAKE_CXX_FLAGS:string=-Wno-inconsistent-missing-override
+        -DCMAKE_BUILD_TYPE:string=${NETPLAY_BUILD_TYPE}
+    
+    BINARY_DIR ${NETPLAY_PREFIX}
+    BUILD_COMMAND ""
+    
+    INSTALL_DIR ${OUTPUT_PREFIX}
+    INSTALL_COMMAND ""
 )
+ELSE ()
+ExternalProject_Add (Netplay
+    PREFIX ${NETPLAY_PREFIX}
+    SOURCE_DIR ${NETPLAY_PREFIX}
 
-ExternalProject_Add_Step (
-  Netplay forceconfigure
-  COMMAND ${CMAKE_COMMAND} -E echo "Force configure of netplay"
-  DEPENDEES update
-  DEPENDERS configure
-  ALWAYS 1)
+    DEPENDS
+        GRPC
+        Protobuf3
+        GoogleTest
+        GoogleMock
+        GLog
+        Mupen64Plus_Core
+        Mupen64Plus_Ui_Console
+	
+    CMAKE_ARGS
+        -DGRPC_ROOT:string=${OUTPUT_PREFIX}
+        -DGTEST_ROOT:string=${GOOGLE_TEST_PREFIX}
+        -DGMOCK_ROOT:string=${GOOGLE_MOCK_PREFIX}
+        -DMUPEN64_ROOT:string=${MUPEN64PLUS_CORE_PREFIX}/src/api
+        -DCMAKE_PROGRAM_PATH:string=${OUTPUT_PREFIX}/bin
+        -DCMAKE_LIBRARY_PATH:string=${OUTPUT_PREFIX}/lib
+        -DCMAKE_INCLUDE_PATH:string=${OUTPUT_PREFIX}/include
+        # TODO(alexgolec): LLVM 7.0.0 on OSX complains about missing overrides in
+        # GRPC headers. Hopefully those headers will eventually be updated, so
+        # remove this once that happens.
+        -DCMAKE_CXX_FLAGS:string=-Wno-inconsistent-missing-override
+        -DCMAKE_BUILD_TYPE:string=${NETPLAY_BUILD_TYPE}
+    
+    BINARY_DIR ${NETPLAY_PREFIX}
+    BUILD_COMMAND make
+    
+    INSTALL_DIR ${OUTPUT_PREFIX}
+    INSTALL_COMMAND ""
+)
+ENDIF ()
+
+ExternalProject_Add_Step (Netplay Force_Configure
+    COMMAND ${CMAKE_COMMAND} -E echo "Force configure of Netplay"
+    DEPENDEES update
+    DEPENDERS configure
+    ALWAYS 1
+)
