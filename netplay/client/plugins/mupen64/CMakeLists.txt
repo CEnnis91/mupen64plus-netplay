@@ -26,14 +26,24 @@ TARGET_LINK_LIBRARIES (
   PluginImpl_test 
   ${M64_PLUGIN_LIBS}
   ${NETPLAY_TEST_LIBS})
+IF (WIN32)
+# TODO(cennis91): Google Test is not being found correctly at the moment
+#GTEST_ADD_TESTS (PluginImpl_test ${GTEST_ARGS} plugin-impl_test.cc)
+ELSE ()
 GTEST_ADD_TESTS (PluginImpl_test ${GTEST_ARGS} plugin-impl_test.cc)
+ENDIF ()
 
 ADD_EXECUTABLE (Util_test util_test.cc)
 TARGET_LINK_LIBRARIES (
   Util_test 
   ${NETPLAY_TEST_LIBS}
   ${M64_PLUGIN_LIBS})
+IF (WIN32)
+# TODO(cennis91): Google Test is not being found correctly at the moment
+#GTEST_ADD_TESTS (Util_test ${GTEST_ARGS} util_test.cc)
+ELSE ()
 GTEST_ADD_TESTS (Util_test ${GTEST_ARGS} util_test.cc)
+ENDIF ()
 
 # ------------------------------------------------------------------------------
 # Mupen64Plugin library

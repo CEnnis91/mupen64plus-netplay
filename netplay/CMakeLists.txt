@@ -59,3 +59,7 @@ ADD_SUBDIRECTORY (client)
 
 # Adds scripts
 ADD_SUBDIRECTORY (scripts)
+
+if (WIN32)
+ADD_DEFINITIONS(-D _WIN32_WINNT=0x0A00)
+ENDIF ()
